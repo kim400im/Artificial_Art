@@ -30,16 +30,14 @@ def send_to_gpt(data):
                 {"role": "system", "content": "In english, You are an artist. you are going to describe a illustration\
                 consulting to the user's demand. Don't use abstract words, use specific wording(the image of a man shrouded in a shroud seems \
                 to merge with the air around him). The style description needs to go first and last in the prompt, or use the director or \
-                artist's name related to the style(ex,Hayao Miyazaki, Junji Ito, naoko takeuchi ...), or specific style(ex: retro anime-> vhs effect,grainy texture, 80s anime, motion blur, realistic). If it's animation or character,\
+                artist's name related to the style(ex,Hayao Miyazaki,Jeremy Geddes,Joe Wright, Junji Ito, simon vouet,naoko takeuchi ...), or specific style(ex: retro anime-> vhs effect,grainy texture, 80s anime, motion blur, realistic). If it's animation or character,\
                  write simply, in 1~2 sentence. If there is a proper noun that you don't know, abstract it. (ex: 짱구 -> Japanese illustration) \
                  If it's realism, describe pose, layout, composition. use lots detail. If the user seems to want retro anime, add --niji 5 at the end of the prompt. \
                  ##Example: 1. Cute little Chinese girl riding a big blue whale slowly swimming in the ocean, ancient China, comfortable, \
                  full body shot, flim stils, highly realistic.\
-                 3.DVD screengrab from studio ghibli movie,A science major male student, sitting at his desk, frowning and struggling\
-                   to write, with a soft, warm light permeating the scene, directed by Hayao Miyazaki, retro anime\
-                   4. Japanese illustration, Retro illustration, Animation style, Light and shadow texture, Film style, \
+                   3. Japanese illustration, Retro illustration, Animation style, Light and shadow texture, Film style, \
                   cat girl, Magix, Neon Genesis Evangelion. \
-                  5. The image of a man shrouded in a shroud seems to merge with the air around him, high contrast \
+                  4. The image of a man shrouded in a shroud seems to merge with the air around him, high contrast \
                   between the dark background and the bright, glowing texture of the material to create a sense of emergence or transformation,\
                    monochrome shades to enhance the mysterious and tense atmosphere,high realism"},
                 {"role": "user", "content": f"Here is the user's demmand: {data}"}
@@ -82,7 +80,7 @@ def upscale(origin_task_id, index):
     return task_id
 
 
-def create_img(prompt):
+def create_img(prompt, ratio):
     url = "https://api.piapi.ai/api/v1/task"
 
     payload = json.dumps({
@@ -90,7 +88,7 @@ def create_img(prompt):
         "task_type": "imagine",
         "input": {
             "prompt": prompt,
-            "aspect_ratio": "16:9",
+            "aspect_ratio": ratio,
             "process_mode": "fast",
             "skip_prompt_check": False,
             "bot_id": 0
@@ -104,7 +102,7 @@ def create_img(prompt):
         }
     })
     headers = {
-        'x-api-key': '09eaba65e4be89c9d89aeaf51e3e0d55e0becdb876ec57c9bca630a2314d5da9',
+        'x-api-key': PIAPI_API_KEY,
         'Content-Type': 'application/json'
     }
 
@@ -122,7 +120,7 @@ def create_img(prompt):
 def check_task_status(task_id):
     url = f"https://api.piapi.ai/api/v1/task/{task_id}"
     headers = {
-        'x-api-key': '09eaba65e4be89c9d89aeaf51e3e0d55e0becdb876ec57c9bca630a2314d5da9'
+        'x-api-key': PIAPI_API_KEY
     }
     while True:
         response = requests.get(url, headers=headers)
@@ -147,8 +145,9 @@ def main():
 
 
     # 설문조사 질문
-    style = st.text_input("원하는 스타일의 그림에 대해 설명해주세요 :")
-    object = st.text_area("추가되었으면 하는 사항에 대해 알려주세요:")
+    style = st.text_input("원하는 스타일의 그림에 대해 설명해주세요(ex. 지브리 영화):")
+    object = st.text_area("그리고 싶은 대상에 대해 설명해주세요(ex. 교복 입은 소녀):")
+    ratio = st.radio("이미지 비율을 선택하세요:", ("16:9", "1:1"))
     
     # Initialize session state for image and selected index
     if "selected_index" not in st.session_state:
@@ -167,22 +166,23 @@ def main():
                 "style": style,
                 "object": object,
             }
-            st.write("제출 완료! GPT가 데이터를 분석 중입니다...")
+            st.write("제출 완료!")
 
         # Spinner 시작
-            with st.spinner("GPT가 데이터를 분석 중입니다. 잠시만 기다려주세요..."):
+            with st.spinner("데이터를 분석 중입니다. 잠시만 기다려주세요... 30초에서 1분 정도 걸립니다"):
                 # GPT에게 데이터 전달
                 gpt_response = send_to_gpt(survey_data)
-                st.subheader("GPT 응답:")
-                st.write(gpt_response)
+                # st.subheader("GPT 응답:")
+                # st.write(gpt_response)
 
-                task_id = create_img(gpt_response)
+                task_id = create_img(gpt_response, ratio)
                 if task_id:
                     st.session_state.task_id=task_id
                     st.session_state.image_url = check_task_status(task_id)
                     data = {
                     "style": style,
                     "object": object,
+                    "ratio":ratio,
                     "gpt_prompt": gpt_response,
                     "img_url": st.session_state.image_url
                 }
