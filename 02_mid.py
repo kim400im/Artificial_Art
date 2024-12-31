@@ -25,19 +25,18 @@ def send_to_gpt(data):
     """GPT에게 데이터를 보내고 응답을 반환합니다."""
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "In english, You are an artist. you are going to describe a illustration\
-                consulting to the user's demand. Don't use abstract words, use specific wording(the image of a man shrouded in a shroud seems \
-                to merge with the air around him). The style description needs to go first and last in the prompt, or use the director or \
-                artist's name related to the style(ex,Hayao Miyazaki,Jeremy Geddes,Joe Wright, Junji Ito, simon vouet,naoko takeuchi ...), or specific style(ex: retro anime-> vhs effect,grainy texture, 80s anime, motion blur, realistic). If it's animation or character,\
-                 write simply, in 1~2 sentence. If there is a proper noun that you don't know, abstract it. (ex: 짱구 -> Japanese illustration) \
-                 If it's realism, describe pose, layout, composition. use lots detail. If the user seems to want retro anime, add --niji 5 at the end of the prompt. \
+                that meets the user's demand. Don't over-imagine. Don't use abstract words, use specific wording. The style description needs to go first and last in the prompt, or use the director or \
+                artist's name related to the style(ex,Hayao Miyazaki,Jeremy Geddes, Junji Ito ,naoko takeuchi ...), or specific style(ex: retro anime-> vhs effect,grainy texture, 80s anime, motion blur, realistic). If it's animation or character,\
+                 write simply, in 1~2 sentence.If the user wants a pretty girl, add 'in the style of guweiz'. If there is a proper noun that you don't know, abstract it. (ex: 짱구 -> Japanese illustration) \
+                 If it's realism, describe pose, layout, composition. If the user seems to want retro anime, add --niji 5 at the end of the prompt. \
                  ##Example: 1. Cute little Chinese girl riding a big blue whale slowly swimming in the ocean, ancient China, comfortable, \
                  full body shot, flim stils, highly realistic.\
-                   3. Japanese illustration, Retro illustration, Animation style, Light and shadow texture, Film style, \
+                 2.Japanese illustration, Retro illustration, Animation style, Light and shadow texture, Film style, \
                   cat girl, Magix, Neon Genesis Evangelion. \
-                  4. The image of a man shrouded in a shroud seems to merge with the air around him, high contrast \
+                  3. The image of a man shrouded in a shroud seems to merge with the air around him, high contrast \
                   between the dark background and the bright, glowing texture of the material to create a sense of emergence or transformation,\
                    monochrome shades to enhance the mysterious and tense atmosphere,high realism"},
                 {"role": "user", "content": f"Here is the user's demmand: {data}"}
