@@ -243,24 +243,24 @@ def main():
         satisfaction = True if satisfaction == "네" else False
         rating = st.slider("평점을 입력해주세요 (1~5):", min_value=1, max_value=5, step=1)
         review=st.text_area("더 나아질 수 있는 점을 입력해주시면 앱 발전에 큰 도움이 될 것입니다! ex) 이미지 사이즈 선택 가능 기능 등등등")
-        will_buy_goods = st.radio("제작된 이미지를 바탕으로 굿즈가 나온다면 구매하시겠습니까?", ("네", "아니요"))
-        will_buy_goods_bool = True if will_buy_goods == "네" else False
+        # will_buy_goods = st.radio("제작된 이미지를 바탕으로 굿즈가 나온다면 구매하시겠습니까?", ("네", "아니요"))
+        # will_buy_goods_bool = True if will_buy_goods == "네" else False
         email = st.text_input("더 많은 소식을 알고 싶으시면,이메일 주소를 입력해주세요:")
 
         if st.button("리뷰 제출"):
-            if email:
+            # if email:
                 review_data = {
                     "satisfaction": satisfaction,
                     "rating": rating,
                     "review": review,
-                    "willingness_to_buy_goods": will_buy_goods_bool,
+                    # "willingness_to_buy_goods": will_buy_goods_bool,
                     "email": email
                 }
                 response = supabase.table("image_user").update(review_data).eq("id", st.session_state.row_id).execute()
                 if response.data:
                     st.success("리뷰가 제출되었습니다. 감사합니다!")
-            else:
-                st.error("이메일 주소를 입력해주세요.")
+            # else:
+            #    st.error("이메일 주소를 입력해주세요.")
 
 
 if __name__ == "__main__":
