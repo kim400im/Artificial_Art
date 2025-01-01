@@ -144,56 +144,85 @@ def main():
     style = st.text_input("원하는 스타일의 그림에 대해 설명해주세요(ex. 지브리 영화):")
     object = st.text_area("그리고 싶은 대상에 대해 설명해주세요(ex. 교복 입은 소녀):")
     ratio = st.radio("이미지 비율을 선택하세요:", ("16:9", "1:1"))
-    
-    # Initialize session state for image and selected index
-    if "selected_index" not in st.session_state:
-        st.session_state.selected_index = None
-    if "image_url" not in st.session_state:
-        st.session_state.image_url = None
-    if "upscaled_image_url" not in st.session_state:
-        st.session_state.upscaled_image_url = None
+
+
+    # 세션 상태 초기화
+    if "review_submitted" not in st.session_state:
+        st.session_state.review_submitted = False
     if "task_id" not in st.session_state:
         st.session_state.task_id = None
+    if "image_url" not in st.session_state:
+        st.session_state.image_url = None
+    if "selected_index" not in st.session_state:
+        st.session_state.selected_index = None
+    if "upscaled_image_url" not in st.session_state:
+        st.session_state.upscaled_image_url = None
+    if "row_id" not in st.session_state:
+        st.session_state.row_id = None
+
 
     # 데이터 제출
     if st.button("제출"):
         if style and object:
-            survey_data = {
-                "style": style,
-                "object": object,
-            }
-            st.write("제출 완료!")
+                st.session_state.review_submitted = False
+                st.session_state.image_url=False
+                survey_data = {"style": style, "object": object}
+                st.write("제출 완료!")
+                with st.spinner("데이터를 분석 중입니다. 잠시만 기다려주세요... 30초에서 1분 정도 걸립니다"):
+                    gpt_response = send_to_gpt(survey_data)
+                    task_id = create_img(gpt_response, ratio)
+                    if task_id:
+                        st.session_state.task_id=task_id
+                        st.session_state.image_url = check_task_status(task_id)
+                        data = {
+                        "style": style,
+                        "object": object,
+                        "ratio":ratio,
+                        "gpt_prompt": gpt_response,
+                        "img_url": st.session_state.image_url
+                    }
 
-        # Spinner 시작
-            with st.spinner("데이터를 분석 중입니다. 잠시만 기다려주세요... 30초에서 1분 정도 걸립니다"):
-                # GPT에게 데이터 전달
-                gpt_response = send_to_gpt(survey_data)
-                # st.subheader("GPT 응답:")
-                # st.write(gpt_response)
-
-                task_id = create_img(gpt_response, ratio)
-                if task_id:
-                    st.session_state.task_id=task_id
-                    st.session_state.image_url = check_task_status(task_id)
-                    data = {
-                    "style": style,
-                    "object": object,
-                    "ratio":ratio,
-                    "gpt_prompt": gpt_response,
-                    "img_url": st.session_state.image_url
-                }
-
-                response = supabase.table("image_user").insert(data).execute()
-                print("response", response.data[0]["id"])
-                if response.data:
-                    st.session_state.row_id = response.data[0]["id"]
-    
+                        response = supabase.table("image_user").insert(data).execute()
+                        print("response", response.data[0]["id"])
+                        if response.data:
+                            st.session_state.row_id = response.data[0]["id"]
 
     # 이미지 출력 및 버튼 표시
     if st.session_state.image_url:
         st.image(st.session_state.image_url, caption="Image from URL", use_column_width=True)
-        st.title("제일 만족스러운 이미지를 골라주세요! ")
-        
+        # st.title("제일 만족스러운 이미지를 골라주세요! ")
+
+
+    if st.session_state.image_url and not st.session_state.review_submitted:
+        st.markdown("<h3 style='font-size:20px;'>이미지를 업스케일링 하시려면면, 리뷰 작성해주세요! (모든 항목이 필수는 아닙니다.)</h3>", unsafe_allow_html=True)
+        satisfaction = st.radio("이미지에 만족하셨나요?", ("네", "아니요"))
+        satisfaction = satisfaction == "네"
+        rating = st.slider("평점을 입력해주세요 (1~5):", 1, 5, 3)
+        review = st.text_area("별로였던 점을 입력해주세요:")
+        # will_buy_goods = st.radio("굿즈 구매 의향이 있습니까?", ("네", "아니요"))
+        # will_buy_goods = will_buy_goods == "네"
+        use_site = st.radio("정식 웹사이트가 나온다면 이용하시겠습니까?", ("네", "아니요"))
+        use_site = use_site == "네"
+        email = st.text_input("이메일 주소를 입력해주세요 (선택 사항):")
+
+        if st.button("리뷰 제출"):
+            review_data = {
+                "satisfaction": satisfaction,
+                "rating": rating,
+                "review": review,
+                # "willingness_to_buy_goods": will_buy_goods,
+                "email": email or None,
+                "use_site": use_site,
+            }
+            response = supabase.table("image_user").update(review_data).eq("id", st.session_state.row_id).execute()
+            if response.data:
+                st.session_state.review_submitted = True
+                st.rerun() 
+                st.success("리뷰가 제출되었습니다. 감사합니다!")
+
+    # 업스케일링 UI
+    if st.session_state.review_submitted:
+        st.write("업스케일할 이미지를 선택해주세요:")
         cols = st.columns(2)
         with cols[0]:
             if st.button("왼쪽 위"):
@@ -201,7 +230,6 @@ def main():
         with cols[1]:
             if st.button("오른쪽 위"):
                 st.session_state.selected_index = 2
-
         cols = st.columns(2)
         with cols[0]:
             if st.button("왼쪽 아래"):
@@ -212,52 +240,16 @@ def main():
 
     # 업스케일링 작업 수행
     if st.session_state.selected_index is not None:
-        st.write(f"You selected index: {st.session_state.selected_index}")
-        if "upscaled_image_url" not in st.session_state or not st.session_state.upscaled_image_url:
-            with st.spinner("업스케일링 작업을 진행 중입니다. 잠시만 기다려주세요..."):
+        if not st.session_state.upscaled_image_url:
+            with st.spinner("업스케일 작업 진행 중..."):
                 task_id_upscale = upscale(st.session_state.task_id, st.session_state.selected_index)
-                # 작업 상태 확인 루프
-                for _ in range(20):  # 최대 20회 (타임아웃 설정)
-                    st.session_state.upscaled_image_url = check_task_status(task_id_upscale)
-                    if st.session_state.upscaled_image_url:
-                        break
-                    time.sleep(1)  # 1초 간격으로 상태 확인
-                
-                # st.session_state.upscaled_image_url = check_task_status(task_id_upscale)
-                if not st.session_state.upscaled_image_url:
-                    st.error("업스케일링 작업이 완료되지 않았습니다. 다시 시도해주세요.")
+                st.session_state.upscaled_image_url = check_task_status(task_id_upscale)
+
         if st.session_state.upscaled_image_url:
             st.image(st.session_state.upscaled_image_url, caption="Upscaled Image", use_column_width=True)
-            updates = {
-            "upscaled_img_url": st.session_state.upscaled_image_url
-        }
-
-            response = supabase.table("image_user").update(updates).eq("id", st.session_state.row_id).execute()
-    
-    if st.session_state.image_url or st.session_state.upscaled_image_url:
-        st.header("리뷰를 작성해주세요!")
-        satisfaction = st.radio("이미지에 만족하셨나요?", ("네", "아니요"))
-        satisfaction = True if satisfaction == "네" else False
-        rating = st.slider("평점을 입력해주세요 (1~5):", min_value=1, max_value=5, step=1)
-        review=st.text_area("더 나아질 수 있는 점을 입력해주시면 앱 발전에 큰 도움이 될 것입니다! ex) 이미지 사이즈 선택 가능 기능 등등등")
-        # will_buy_goods = st.radio("제작된 이미지를 바탕으로 굿즈가 나온다면 구매하시겠습니까?", ("네", "아니요"))
-        # will_buy_goods_bool = True if will_buy_goods == "네" else False
-        email = st.text_input("더 많은 소식을 알고 싶으시면,이메일 주소를 입력해주세요:")
-
-        if st.button("리뷰 제출"):
-            # if email:
-                review_data = {
-                    "satisfaction": satisfaction,
-                    "rating": rating,
-                    "review": review,
-                    # "willingness_to_buy_goods": will_buy_goods_bool,
-                    "email": email
-                }
-                response = supabase.table("image_user").update(review_data).eq("id", st.session_state.row_id).execute()
-                if response.data:
-                    st.success("리뷰가 제출되었습니다. 감사합니다!")
-            # else:
-            #    st.error("이메일 주소를 입력해주세요.")
+            updates = {"upscaled_img_url": st.session_state.upscaled_image_url}
+            supabase.table("image_user").update(updates).eq("id", st.session_state.row_id).execute()
+            st.success("업스케일 작업이 완료되었습니다!")
 
 
 if __name__ == "__main__":
