@@ -201,7 +201,7 @@ def main():
         review = st.text_area("별로였던 점을 입력해주세요:")
         # will_buy_goods = st.radio("굿즈 구매 의향이 있습니까?", ("네", "아니요"))
         # will_buy_goods = will_buy_goods == "네"
-        use_site = st.radio("정식 웹사이트가 나온다면 이용하시겠습니까?", ("네", "아니요"))
+        use_site = st.radio("정식 웹사이트가 나온다면 이용하시겠습니까? (해당 사이트를 계속 이용할 의향이 있는지)", ("네", "아니요"))
         use_site = use_site == "네"
         email = st.text_input("이메일 주소를 입력해주세요 (선택 사항):")
 
