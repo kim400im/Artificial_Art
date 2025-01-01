@@ -21,6 +21,51 @@ client = OpenAI(
     api_key=OPENAI_API_KEY
 )
 
+def filter_inappropriate_content_gpt(data):
+    """
+    GPT를 사용하여 사용자의 입력 데이터를 검열합니다.
+
+    Parameters:
+        data (str): 사용자 입력 데이터.
+
+    Returns:
+        bool: True if inappropriate content is detected, otherwise False.
+        str: 검열 결과 메시지.
+    """
+    try:
+        # GPT 요청을 통해 부적절한 내용 검열
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a content moderation assistant. Analyze the user's input and determine if it contains inappropriate, offensive, or NSFW content. "
+                        "Try to censor even inappropriate words that Midjourney can't draw. such as sexual elements, sexual clotings"
+                        "Cigaratte and Tobacco is not subject for censorshhip. respond with Content approved"
+                        "If it does, respond with 'Content flagged: [reason]'. If not, respond with 'Content approved'. "
+                        "Use the following categories to flag content: hate speech, adult content, racism, sexism, or illegal activities."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": f"Here is the user's input: {data}"
+                }
+            ]
+        )
+
+        gpt_response = response.choices[0].message.content.strip()
+
+        if "Content flagged:" in gpt_response:
+            # 부적절한 내용이 감지된 경우
+            reason = gpt_response.split("Content flagged:")[1].strip()
+            return True, f"부적절한 내용이 감지되었습니다: {reason}"
+        else:
+            # 내용이 적합한 경우
+            return False, ""
+    except Exception as e:
+        return True, f"검열 과정에서 오류가 발생했습니다: {e}"
+
 def send_to_gpt(data):
     """GPT에게 데이터를 보내고 응답을 반환합니다."""
     try:
@@ -167,25 +212,30 @@ def main():
                 st.session_state.review_submitted = False
                 st.session_state.image_url=False
                 survey_data = {"style": style, "object": object}
-                st.write("제출 완료!")
-                with st.spinner("데이터를 분석 중입니다. 잠시만 기다려주세요... 30초에서 1분 정도 걸립니다"):
-                    gpt_response = send_to_gpt(survey_data)
-                    task_id = create_img(gpt_response, ratio)
-                    if task_id:
-                        st.session_state.task_id=task_id
-                        st.session_state.image_url = check_task_status(task_id)
-                        data = {
-                        "style": style,
-                        "object": object,
-                        "ratio":ratio,
-                        "gpt_prompt": gpt_response,
-                        "img_url": st.session_state.image_url
-                    }
+                is_inappropriate, message = filter_inappropriate_content_gpt(f"{style} {object}")
+                if is_inappropriate:
+                    # 부적절한 내용이 감지된 경우 에러 메시지 출력
+                    st.error(message)
+                else:
+                    st.write("제출 완료!")
+                    with st.spinner("데이터를 분석 중입니다. 잠시만 기다려주세요... 30초에서 1분 정도 걸립니다"):
+                        gpt_response = send_to_gpt(survey_data)
+                        task_id = create_img(gpt_response, ratio)
+                        if task_id:
+                            st.session_state.task_id=task_id
+                            st.session_state.image_url = check_task_status(task_id)
+                            data = {
+                            "style": style,
+                            "object": object,
+                            "ratio":ratio,
+                            "gpt_prompt": gpt_response,
+                            "img_url": st.session_state.image_url
+                        }
 
-                        response = supabase.table("image_user").insert(data).execute()
-                        print("response", response.data[0]["id"])
-                        if response.data:
-                            st.session_state.row_id = response.data[0]["id"]
+                            response = supabase.table("image_user").insert(data).execute()
+                            print("response", response.data[0]["id"])
+                            if response.data:
+                                st.session_state.row_id = response.data[0]["id"]
 
     # 이미지 출력 및 버튼 표시
     if st.session_state.image_url:
@@ -201,7 +251,7 @@ def main():
         review = st.text_area("별로였던 점을 입력해주세요:")
         # will_buy_goods = st.radio("굿즈 구매 의향이 있습니까?", ("네", "아니요"))
         # will_buy_goods = will_buy_goods == "네"
-        use_site = st.radio("정식 웹사이트가 나온다면 이용하시겠습니까? (해당 사이트를 계속 이용할 의향이 있는지)", ("네", "아니요"))
+        use_site = st.radio("정식 웹사이트가 나온다면 이용하시겠습니까? (해당 사이트를 지속적으로 이용할 의향이 있는지)", ("네", "아니요"))
         use_site = use_site == "네"
         email = st.text_input("이메일 주소를 입력해주세요 (선택 사항):")
 
