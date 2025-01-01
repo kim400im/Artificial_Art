@@ -244,7 +244,7 @@ def main():
 
 
     if st.session_state.image_url and not st.session_state.review_submitted:
-        st.markdown("<h3 style='font-size:20px;'>이미지를 업스케일링 하시려면면, 리뷰 작성해주세요! (모든 항목이 필수는 아닙니다.)</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='font-size:20px;'>이미지를 업스케일링(이미지 선택) 하시려면, 리뷰 작성해주세요! (모든 항목이 필수는 아닙니다.)</h3>", unsafe_allow_html=True)
         satisfaction = st.radio("이미지에 만족하셨나요?", ("네", "아니요"))
         satisfaction = satisfaction == "네"
         rating = st.slider("평점을 입력해주세요 (1~5):", 1, 5, 3)
