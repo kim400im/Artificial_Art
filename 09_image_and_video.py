@@ -356,7 +356,7 @@ class ViduAI:
         return response.json()
 
 def main():
-    st.title("Create Your Animaion! :magic_wand:")
+    st.title("Create Your Animaion! ")
     # st.write("This is a demo version of the character creation tool. Please provide your feedback to help us improve!")
     # 상세 설명 추가
     st.markdown("""
