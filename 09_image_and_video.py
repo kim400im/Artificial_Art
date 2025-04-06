@@ -772,16 +772,31 @@ def main():
                                     st.session_state.action_video_url = creations[0].get("url")
                                     st.session_state.action_video_prompt = action_video_prompt
                                     
-                                    # 데이터베이스에 동작 비디오 정보 저장
-                                    action_video_data = {
-                                        "parent_id": st.session_state.action_id,
-                                        "video_type": "action",
-                                        "video_prompt": action_video_prompt,
-                                        "video_url": st.session_state.action_video_url
-                                    }
-                                    action_video_response = supabase.table("image_videos").insert(action_video_data).execute()
-                                    if action_video_response.data:
-                                        st.session_state.action_video_id = action_video_response.data[0]["id"]
+                                    try:
+                                        # 먼저 action_id로 시도
+                                        action_video_data = {
+                                            "parent_id": st.session_state.action_id,
+                                            "video_type": "action",
+                                            "video_prompt": action_video_prompt,
+                                            "video_url": st.session_state.action_video_url
+                                        }
+                                        action_video_response = supabase.table("image_videos").insert(action_video_data).execute()
+                                        if action_video_response.data:
+                                            st.session_state.action_video_id = action_video_response.data[0]["id"]
+                                    except Exception as e:
+                                        # 실패하면 row_id(image_user의 ID)로 시도
+                                        try:
+                                            action_video_data = {
+                                                "parent_id": st.session_state.row_id,
+                                                "video_type": "action",
+                                                "video_prompt": action_video_prompt,
+                                                "video_url": st.session_state.action_video_url
+                                            }
+                                            action_video_response = supabase.table("image_videos").insert(action_video_data).execute()
+                                            if action_video_response.data:
+                                                st.session_state.action_video_id = action_video_response.data[0]["id"]
+                                        except Exception as e2:
+                                            st.error(f"Error saving video data: {e2}")
                                     
                                     st.success("Action video created successfully!")
                                 else:
