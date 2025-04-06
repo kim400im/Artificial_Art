@@ -602,7 +602,7 @@ def main():
         st.markdown("<h3 style='font-size:20px;'>Please complete our survey to upscale your image! (All fields are optional)</h3>", unsafe_allow_html=True)
         
         # 만족도 관련 질문
-        overall_satisfaction = st.slider("How satisfied are you with this service overall? (1-5)", 1, 5, 3, key="overall_satisfaction")
+        overall_satisfaction = st.slider("How satisfied are you with this service overall? (1-5)", 1, 5, 5, key="overall_satisfaction")
         
         favorite_feature = st.selectbox(
             "Which feature did you like the most?", 
@@ -610,9 +610,9 @@ def main():
             key="favorite_feature"
         )
         
-        character_quality = st.slider("How satisfied are you with the character creation quality? (1-5)", 1, 5, 3, key="character_quality")
-        action_quality = st.slider("How satisfied are you with the action image creation quality? (1-5)", 1, 5, 3, key="action_quality")
-        video_quality = st.slider("How satisfied are you with the video creation quality? (1-5)", 1, 5, 3, key="video_quality")
+        character_quality = st.slider("How satisfied are you with the character creation quality? (1-5)", 1, 5, 5, key="character_quality")
+        action_quality = st.slider("How satisfied are you with the action image creation quality? (1-5)", 1, 5, 5, key="action_quality")
+        video_quality = st.slider("How satisfied are you with the video creation quality? (1-5)", 1, 5, 5, key="video_quality")
         
         # 사용성 관련 질문
         difficulties = st.text_area("Did you encounter any difficulties while using the service?", key="difficulties")
@@ -629,7 +629,7 @@ def main():
             key="video_speed"
         )
         
-        interface_ease = st.slider("How easy was the interface to use? (1-5)", 1, 5, 3, key="interface_ease")
+        interface_ease = st.slider("How easy was the interface to use? (1-5)", 1, 5, 5, key="interface_ease")
         
         # 비즈니스 모델 관련 질문
         would_use = st.radio("Would you use this service if it's officially launched?", ["Yes", "No"], key="would_use")
