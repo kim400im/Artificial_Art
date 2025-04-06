@@ -191,7 +191,7 @@ def main():
 
     # 이미지 출력 및 버튼 표시
     if st.session_state.image_url:
-        st.image(st.session_state.image_url, caption="Image from URL", use_column_width=True)
+        st.image(st.session_state.image_url, caption="Image from URL", use_container_width=True)
         st.title("제일 만족스러운 이미지를 골라주세요! ")
         
         cols = st.columns(2)
@@ -227,7 +227,7 @@ def main():
                 if not st.session_state.upscaled_image_url:
                     st.error("업스케일링 작업이 완료되지 않았습니다. 다시 시도해주세요.")
         if st.session_state.upscaled_image_url:
-            st.image(st.session_state.upscaled_image_url, caption="Upscaled Image", use_column_width=True)
+            st.image(st.session_state.upscaled_image_url, caption="Upscaled Image", use_container_width=True)
             updates = {
             "upscaled_img_url": st.session_state.upscaled_image_url
         }
