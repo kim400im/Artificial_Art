@@ -76,7 +76,7 @@ def send_to_gpt(data):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "In English, create minimal prompts for Midjourney. Simply combine the user's style request and character/object description in english. Do not add extra details the user hasn't requested, must be in midjourney prompt style"},
+                {"role": "system", "content": "In English, create minimal prompts for Midjourney. Simply combine the user's style request and character/object description in english. Do not add extra details the user hasn't requested, must be in midjourney prompt style, do not add /imagine in the prompt, only make it into text"},
                 {"role": "user", "content": f"Here is the user's demmand: {data}"}
             ]
         )
